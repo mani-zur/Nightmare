@@ -13,7 +13,7 @@ compile:
 	javac -cp $(ANTLR):output:src:. $(SRC)/Main.java -d output/out
 
 test:
-	java -cp $(ANTLR):output/out:. Main $(CODE)/onecmd.nm > Nightmare.ll
+	java -cp $(ANTLR):output/out:. Main $(CODE)/test.nm > Nightmare.ll
 	lli Nightmare.ll
 
 clean:

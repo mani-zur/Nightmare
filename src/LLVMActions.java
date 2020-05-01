@@ -34,6 +34,22 @@ public class LLVMActions extends NightmareBaseListener {
     public void exitFloat(NightmareParser.FloatContext ctx) { 
         stack.push( new Value(ctx.FLOAT().getText(), VarType.FLOAT ));
 	}
+
+	@Override 
+	public void exitId(NightmareParser.IdContext ctx) {
+		String ID = ctx.ID().getText();
+		VarType type = variables.get(ID);
+		switch (type) {
+			case INT:
+				LLVMGenerator.load_var(ID,"i32");
+				break;
+			case FLOAT:
+				LLVMGenerator.load_var(ID,"double");
+			default:
+				break;
+		}
+		stack.push(new Value('%' + String.valueOf(LLVMGenerator.getCurrentReg()-1),type));
+	}
 	
 	//ARITMETIC OPERATION
 
@@ -172,10 +188,31 @@ public class LLVMActions extends NightmareBaseListener {
 		}
 	}
 
+	@Override 
+	public void enterAss_init(NightmareParser.Ass_initContext ctx) { 
+		String ID = ctx.assign_stm().ID().getText();
+		if (variables.containsKey(ID)) error(ctx.getStart().getLine(), "Redeclaration");
+		String type = ctx.TYPE().getText();
+		switch (type) {
+			case "Tank":	//int
+				LLVMGenerator.declare_i32(ID);
+				variables.put(ID, VarType.INT);
+				break;
+			case "Daisy":	//Float
+				LLVMGenerator.declare_float(ID);
+				variables.put(ID, VarType.FLOAT);
+				break;
+			default:
+				error(ctx.getStart().getLine(), "Unknown type");
+				break;
+		}
+
+	}
+
     @Override 
     public void exitAssign_stm(NightmareParser.Assign_stmContext ctx) {
 		String ID = ctx.ID().getText();
-		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Unknown vaariable");
+		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Unknown variable");
 		Value v = stack.pop();
 		switch (v.type) {
 			case INT:
@@ -196,7 +233,7 @@ public class LLVMActions extends NightmareBaseListener {
     @Override
     public void exitWrite_stm(NightmareParser.Write_stmContext ctx) { 
 		String ID = ctx.ID().getText();
-		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Unknown vaariable");
+		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Unknown variable");
 		VarType type = variables.get(ID);
 		switch (type) {
 			case INT:
@@ -212,7 +249,7 @@ public class LLVMActions extends NightmareBaseListener {
 	@Override 
 	public void exitRead_stm(NightmareParser.Read_stmContext ctx) { 
 		String ID = ctx.ID().getText();
-		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Unknown vaariable");
+		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Unknown variable");
 		VarType type = variables.get(ID);
 		switch (type) {
 			case INT:
@@ -231,7 +268,4 @@ public class LLVMActions extends NightmareBaseListener {
     System.err.println("Error, line "+line+", "+msg);
     System.exit(1);
     } 
-
-    
-
 }

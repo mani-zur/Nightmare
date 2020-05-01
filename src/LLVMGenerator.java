@@ -4,6 +4,15 @@ class LLVMGenerator{
 	static String main_text = "";
 	static int reg = 1;
 
+	static int getCurrentReg(){
+		return reg;
+	}
+
+	static void load_var(String id, String type){
+		main_text += "%" + reg + " = load " + type + ", " + type + "* %" + id + "\n";
+		reg++;
+	}
+
 
     static void printf_i32(String id){
 		main_text += "%"+reg+" = load i32, i32* %"+id+"\n";

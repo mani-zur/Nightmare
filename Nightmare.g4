@@ -10,6 +10,7 @@ command
     | write_stm
     | init_stm
     | assign_stm
+    | comment
     ;
 
 //Statemnts
@@ -25,6 +26,7 @@ write_stm
 init_stm
     : TYPE ID       #Variable_Init
     | TYPE table ID #Table_Init
+    | TYPE assign_stm #ass_init
     ;
 
 assign_stm
@@ -47,7 +49,12 @@ expr2
     : INT   #Int
     | FLOAT #Float
     | STRING    #String
+    | ID    #Id
     | '(' expr0 ')' #par
+    ;
+
+comment
+    : 'nvm' ( ~('\\'|'"') )* 'nvm'
     ;
 
 //Types
