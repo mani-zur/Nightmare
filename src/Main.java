@@ -4,13 +4,13 @@ import org.antlr.v4.runtime.tree.*;
 public class Main {
     public static void main(String[] args) throws Exception {
         ANTLRFileStream input = new ANTLRFileStream(args[0]);
-
+        
         NightmareLexer lexer = new NightmareLexer(input);
 
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         NightmareParser parser = new NightmareParser(tokens);
 
-        ParseTree tree = parser.prog(); 
+        ParseTree tree = parser.nightmare(); 
 
 //        System.out.println(tree.toStringTree(parser));
 

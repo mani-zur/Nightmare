@@ -1,3 +1,4 @@
+
 grammar Nightmare ;
 
 nightmare
@@ -18,34 +19,42 @@ read_stm
     ;
 
 write_stm
-    : 'Think' (ID | expr )
-    ;
-
-assign_stm
-    : ID '=' expr
+    : 'Think' (ID | expr0 )
     ;
 
 init_stm
-    : TYPE TABLE? ID ( '=' expr )? 
+    : TYPE ID       #Variable_Init
+    | TYPE table ID #Table_Init
     ;
 
-expr
-    : expr ('+'|'-'|'*'|'/') expr
-    | '(' expr ')'
-    | ID
-    | value
+assign_stm
+    : ID '=' expr0
+    ;
+
+expr0
+    : expr1             #Single0
+    | expr1 ADD expr1   #Add
+    | expr1 SUB expr1   #Sub
+    ;
+
+expr1
+    : expr2             #Single1
+    | expr2 MUL expr2   #Mul
+    | expr2 DIV expr2   #Div
+    ;
+
+expr2
+    : INT   #Int
+    | FLOAT #Float
+    | STRING    #String
+    | '(' expr0 ')' #par
     ;
 
 //Types
 TYPE
     :'Tank'
     |'Daisy'
-    ;
-
-value
-    : INT
-    | FLOAT
-    | STRING
+    |'Fork'
     ;
 
 ID
@@ -64,11 +73,16 @@ STRING
     : '"' ( ~('\\'|'"') )* '"'
     ;
  
-TABLE
-    :'^^' INT '^^'
+table
+    :'^' WS* INT WS* '^'
     ;
 
 //Whitesymbols
+
+ADD : '+';
+SUB : '-';
+MUL : '*';
+DIV : '/';
 
 WS 
     : [ \t\r\n]+ -> skip 
