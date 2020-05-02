@@ -13,6 +13,18 @@ class LLVMGenerator{
 		reg++;
 	}
 
+	static void table_assign(String id, String i, String type, String max, String val){
+		main_text += "%" + reg + " = getelementptr inbounds ["+max+" x "+type+"], ["+max+" x "+type+"]* %"+id+", i64 0, i64 "+ i + "\n";
+		reg++;
+		main_text +="store "+ type +" "+ val + ", " + type + "* %" + (reg-1) + "\n";
+	}
+
+	
+
+	static void getTableElement(String id, String type, String i){
+		main_text += "%" + reg + " = getelementptr inbounds [2 x i32], [2 x i32]* %1, i64 0, i64 1";
+	}
+
 
     static void printf_i32(String id){
 		main_text += "%"+reg+" = load i32, i32* %"+id+"\n";
@@ -51,7 +63,7 @@ class LLVMGenerator{
 	}
 
 	static void sub_i32(String val1, String val2){
-		main_text += "%"+reg+" = sub i32 "+val1+", "+val2+"\n";
+		main_text += "%"+reg+" = sub nsw i32 "+val1+", "+val2+"\n";
 		reg++;
 	}
   

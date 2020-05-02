@@ -15,7 +15,8 @@ class Value{
 
 public class LLVMActions extends NightmareBaseListener {
 
-    HashMap<String, VarType> variables = new HashMap<String, VarType>();
+	HashMap<String, VarType> variables = new HashMap<String, VarType>();
+	HashMap<String, String> tables = new HashMap<String, String>();
     Stack <Value> stack = new Stack<Value>();
 
     @Override 
@@ -77,8 +78,8 @@ public class LLVMActions extends NightmareBaseListener {
 
 	@Override 
 	public void exitSub(NightmareParser.SubContext ctx) {
-		Value v1 = stack.pop();
 		Value v2 = stack.pop();
+		Value v1 = stack.pop();
 		if (v1.type == v2.type) {
             switch (v1.type) {
                 case INT:
@@ -167,7 +168,7 @@ public class LLVMActions extends NightmareBaseListener {
 
 	@Override 
 	public void exitTable_Init(NightmareParser.Table_InitContext ctx) { 
-		String ID = ctx.ID().getText();
+		String ID = ctx.table().ID().getText();
 		if (variables.containsKey(ID)) error(ctx.getStart().getLine(), "Redeclaration");
 		String type = ctx.TYPE().getText();
 		String size = ctx.table().INT().getText();
@@ -186,6 +187,7 @@ public class LLVMActions extends NightmareBaseListener {
 			default:
 				break;
 		}
+		tables.put(ID, size);
 	}
 
 	@Override 
@@ -222,6 +224,26 @@ public class LLVMActions extends NightmareBaseListener {
 				LLVMGenerator.assign_float(ID, v.name);
 			case STRING:
 
+			default:
+				break;
+		}
+	}
+
+	@Override public void exitAssign_table_stm(NightmareParser.Assign_table_stmContext ctx) { 
+		String ID = ctx.table().ID().getText();
+		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Redeclaration");
+		if (!tables.containsKey(ID)) error(ctx.getStart().getLine(), "This is not a table");
+		VarType type = variables.get(ID);
+		String size = tables.get(ID);
+		String i = ctx.table().INT().getText();
+		Value v = stack.pop();
+		switch (type) {
+			case INT_TBL:
+				LLVMGenerator.table_assign(ID,i,"i32",size, v.name);
+				break;
+			case FLOAT_TBL:
+
+				break;
 			default:
 				break;
 		}

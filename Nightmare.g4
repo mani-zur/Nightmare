@@ -10,6 +10,7 @@ command
     | write_stm
     | init_stm
     | assign_stm
+    | assign_table_stm
     | comment
     ;
 
@@ -25,12 +26,16 @@ write_stm
 
 init_stm
     : TYPE ID       #Variable_Init
-    | TYPE table ID #Table_Init
+    | TYPE table #Table_Init
     | TYPE assign_stm #ass_init
     ;
 
 assign_stm
     : ID '=' expr0
+    ;
+
+assign_table_stm
+    : table '=' expr0
     ;
 
 expr0
@@ -69,11 +74,11 @@ ID
     ;
 
 INT  
-    :[0-9]+
+    :'-'?[0-9]+
     ;
 
 FLOAT
-    :[0-9]*'.'[0-9]+
+    :'-'?[0-9]*'.'[0-9]+
     ;
 
 STRING 
@@ -81,7 +86,7 @@ STRING
     ;
  
 table
-    :'^' WS* INT WS* '^'
+    :ID '^' WS* INT WS* '^'
     ;
 
 //Whitesymbols
