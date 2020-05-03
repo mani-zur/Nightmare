@@ -11,6 +11,7 @@ command
     | init_stm
     | assign_stm
     | assign_table_stm
+    | assign_string
     | comment
     ;
 
@@ -21,7 +22,7 @@ read_stm
     ;
 
 write_stm
-    : 'Think' (ID | expr0 )
+    : 'Think' expr0
     ;
 
 init_stm
@@ -36,6 +37,10 @@ assign_stm
 
 assign_table_stm
     : table '=' expr0
+    ;
+
+assign_string
+    : ID '=' STRING
     ;
 
 expr0
@@ -53,13 +58,13 @@ expr1
 expr2
     : INT   #Int
     | FLOAT #Float
-    | STRING    #String
     | ID    #Id
+    | table #Table_load
     | '(' expr0 ')' #par
     ;
 
 comment
-    : 'nvm' ( ~('\\'|'"') )* 'nvm'
+    : 'nvm' ( ~('nvm'|'\\'|'"') )* 'nvm'
     ;
 
 //Types
