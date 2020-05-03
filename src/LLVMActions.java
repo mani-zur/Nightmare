@@ -46,6 +46,29 @@ public class LLVMActions extends NightmareBaseListener {
 				break;
 			case FLOAT:
 				LLVMGenerator.load_var(ID,"double");
+			case STRING:
+				LLVMGenerator.load_var(ID,"i8*");
+			default:
+				break;
+		}
+		stack.push(new Value('%' + String.valueOf(LLVMGenerator.getCurrentReg()-1),type));
+	}
+
+	@Override public void exitTable_load(NightmareParser.Table_loadContext ctx) {
+		String ID = ctx.table().ID().getText();
+		String i = ctx.table().INT().getText();
+		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Unknown wariable");
+		if (!tables.containsKey(ID)) error(ctx.getStart().getLine(), "Variable is not a table");
+		VarType type = variables.get(ID);
+		String len = tables.get(ID);
+		switch (type) {
+			case INT_TBL:
+				LLVMGenerator.getTableElement(ID,i,"i32",len);
+				type = VarType.INT;
+				break;
+			case FLOAT_TBL:
+				LLVMGenerator.getTableElement(ID,i,"double",len);
+				type = VarType.FLOAT;
 			default:
 				break;
 		}
@@ -159,8 +182,12 @@ public class LLVMActions extends NightmareBaseListener {
 				LLVMGenerator.declare_float(ID);
 				variables.put(ID, VarType.FLOAT);
 				break;
+			case "Fork":	//String
+				LLVMGenerator.declare_string(ID);
+				variables.put(ID, VarType.STRING);
+				break;
 			default:
-				error(ctx.getStart().getLine(), "Unknown type");
+				error(ctx.getStart().getLine(),":" + type + ":Unknown type");
 				break;
 		}
 
@@ -181,9 +208,6 @@ public class LLVMActions extends NightmareBaseListener {
 				LLVMGenerator.declare_table(ID, size, "double");
 				variables.put(ID, VarType.FLOAT_TBL);
 				break;
-			case "Fork":	//c_string
-				LLVMGenerator.declare_table(ID, size, "i8");
-				variables.put(ID, VarType.STRING);
 			default:
 				break;
 		}
@@ -231,7 +255,7 @@ public class LLVMActions extends NightmareBaseListener {
 
 	@Override public void exitAssign_table_stm(NightmareParser.Assign_table_stmContext ctx) { 
 		String ID = ctx.table().ID().getText();
-		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Redeclaration");
+		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Unknown variable");
 		if (!tables.containsKey(ID)) error(ctx.getStart().getLine(), "This is not a table");
 		VarType type = variables.get(ID);
 		String size = tables.get(ID);
@@ -249,20 +273,30 @@ public class LLVMActions extends NightmareBaseListener {
 		}
 	}
 
+	@Override 
+	public void exitAssign_string(NightmareParser.Assign_stringContext ctx) { 
+		String ID = ctx.ID().getText();
+		String str = ctx.STRING().getText().replace("\"","");
+		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Unknown variable");
+		LLVMGenerator.string_assign(ID, str);
+	}
+
 	// I/O OPERATIONS
 
 
     @Override
     public void exitWrite_stm(NightmareParser.Write_stmContext ctx) { 
-		String ID = ctx.ID().getText();
-		if (!variables.containsKey(ID)) error(ctx.getStart().getLine(), "Unknown variable");
-		VarType type = variables.get(ID);
-		switch (type) {
+		Value v = stack.pop();
+		switch (v.type) {
 			case INT:
-				LLVMGenerator.printf_i32(ID);
+				LLVMGenerator.printf_i32(v.name);
 				break;
 			case FLOAT:
-				LLVMGenerator.printf_float(ID);
+				LLVMGenerator.printf_float(v.name);
+				break;
+			case STRING:
+				LLVMGenerator.printf_string(v.name);
+				break;
 			default:
 				break;
 		}
@@ -280,6 +314,8 @@ public class LLVMActions extends NightmareBaseListener {
 			case FLOAT:
 				LLVMGenerator.scanf_float(ID);
 				break;
+			case STRING:
+				LLVMGenerator.scanf_string(ID);
 			default:
 				break;
 		}

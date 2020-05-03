@@ -19,37 +19,57 @@ class LLVMGenerator{
 		main_text +="store "+ type +" "+ val + ", " + type + "* %" + (reg-1) + "\n";
 	}
 
+	static void string_assign(String id, String str){
+		int len = (str.length()+1);
+		header_text += "@." + id+" = private unnamed_addr constant ["+ len + " x i8] c\""+str+"\\00\"\n";
+		main_text += "store i8* getelementptr inbounds (["+len+" x i8], ["+len+" x i8]* @."+id+", i64 0, i64 0), i8** %"+id+"\n";
+
+	}
+
 	
 
-	static void getTableElement(String id, String type, String i){
-		main_text += "%" + reg + " = getelementptr inbounds [2 x i32], [2 x i32]* %1, i64 0, i64 1";
+	static void getTableElement(String id, String i, String type, String max){
+		main_text += "%" + reg + " = getelementptr inbounds ["+max+" x "+type+"], ["+max+" x "+type+"]* %"+id+", i64 0, i64 "+ i + "\n";
+		reg++;
+		main_text += "%" + reg + " = load " + type + ", " + type + "* %" + Integer.toString(reg-1) + "\n";
+		reg++;
 	}
 
 
     static void printf_i32(String id){
-		main_text += "%"+reg+" = load i32, i32* %"+id+"\n";
-		reg++;
+		//main_text += "%"+reg+" = load i32, i32* %"+id+"\n";
+		//reg++;
 		main_text += "%"+reg+" = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @pstr_int, i32 0, i32 0), i32 %"+(reg-1)+")\n";
 		reg++;
 	}
 
 	static void printf_float(String id){
-		main_text += "%"+reg+" = load double, double* %"+id+"\n";
-		reg++;
+		//main_text += "%"+reg+" = load double, double* %"+id+"\n";
+		//reg++;
 		main_text += "%"+reg+" = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @pstr_dbl, i32 0, i32 0), double %"+(reg-1)+")\n";
 		reg++;
 	}
+
+	static void printf_string(String id){
+		main_text += "%"+reg+" = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @pstr_str, i32 0, i32 0), i8* %"+(reg-1)+")\n";
+		reg++;
+	}
+
 
 	static void scanf_i32(String id){
 		main_text += "%"+reg+" = call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @rstr_int, i32 0, i32 0), i32* %" + id + ")\n";
 		reg++;      
 	}
   
-	 static void scanf_float(String id){
+	static void scanf_float(String id){
 		main_text += "%"+reg+" = call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @rstr_dbl, i32 0, i32 0), double* %" + id + ")\n";
 		reg++;      
 	}
 
+	static void scanf_string(String id){
+		main_text += "%"+reg+" = call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @pstr_str, i32 0, i32 0), i8* %" + id+ ")\n";
+		reg++;    
+	}
 
 
     static void add_i32(String val1, String val2){
@@ -100,6 +120,10 @@ class LLVMGenerator{
 		main_text += "%"+id+" = alloca double\n";
 	}
 
+	static void declare_string(String id){
+		main_text += "%"+id+" = alloca i8*\n";
+	}
+
 	static void declare_table(String id, String n, String type){
 		main_text += "%"+id+" = alloca [ "+ n + " x " + type + " ] \n";
 	}
@@ -116,15 +140,16 @@ class LLVMGenerator{
     static String generate(){
     	String text = "";
 		text += "declare i32 @printf(i8*, ...)\n";
-    	text += "declare i32 @scanf(i8*, ...)\n";
+		text += "declare i32 @scanf(i8*, ...)\n";
 		text += "@rstr_dbl = constant [4 x i8] c\"%lf\\00\", align 1\n";
 		text += "@pstr_dbl = constant [5 x i8] c\"%lf\\0A\\00\", align 1\n";
 		text += "@rstr_int = constant [3 x i8] c\"%d\\00\", align 1\n";
 		text += "@pstr_int = constant [4 x i8] c\"%d\\0A\\00\", align 1\n";
+		text += "@pstr_str = constant [4 x i8] c\"%s\\0A\\00\", align 1\n";
     	text += header_text;
-    	text += "define i32 @main() nounwind{\n";
+		text += "define i32 @main() nounwind{\n";
     	text += main_text;
-    	text += "ret i32 0 }\n";
+		text += "ret i32 0 }\n";
     	return text;
     }
  
