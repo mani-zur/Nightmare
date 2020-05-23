@@ -1,17 +1,30 @@
-Tank x = 10 xD
-Daisy nem = 1.0 xD
-Daisy y = 5.0 xD
-y = 5.0 + y xD
-y = y + nem xD
-
-Think y xD
-
-nvm 
-Tank ^ 5 ^ table xD
-Fork ^10^ tbl xD
-
-Thanks x xD
+nvm ZMIENNE nvm xD
+Tank x = -125 * 10 xD
+x = x + 5 xD
+Daisy y xD
 Thanks y xD
 Think x xD
 Think y xD
-nvm xD
+
+nvm TABLICE nvm xD
+Tank tab ^2^ xD
+tab^0^ = x + 10 xD
+Think tab^0^ xD
+
+nvm STRINGI nvm xD
+Fork str xD
+str = "Przykladowy tekst" xD
+Think str xD
+
+Fork read ^100^ xD
+Thanks read xD
+Think read xD
+
+nvm PETLA nvm xD
+Tank i = 3 xD
+LOOP i
+    LOOP 3
+        Think i xD
+        i = i + 1 xD
+    ENDLOOP xD
+ENDLOOP xD

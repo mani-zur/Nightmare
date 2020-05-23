@@ -23,6 +23,18 @@ public class LLVMActions extends NightmareBaseListener {
     public void exitNightmare(NightmareParser.NightmareContext ctx) { 
         System.out.println(LLVMGenerator.generate());
 	}
+
+	//LOOP
+	@Override 
+	public void exitRepetitions(NightmareParser.RepetitionsContext ctx) { 
+		LLVMGenerator.repeatstart(stack.pop().name);
+	}
+	
+	@Override 
+	public void exitLoop_stm(NightmareParser.Loop_stmContext ctx) { 
+		LLVMGenerator.repeatend();
+	}
+
 	
 	//TYPE
 
@@ -46,8 +58,11 @@ public class LLVMActions extends NightmareBaseListener {
 				break;
 			case FLOAT:
 				LLVMGenerator.load_var(ID,"double");
+				break;
 			case STRING:
-				LLVMGenerator.load_var(ID,"i8*");
+				if (tables.containsKey(ID)) LLVMGenerator.getTableElement(ID,"0","i8",tables.get(ID));
+				else LLVMGenerator.load_var(ID,"i8*");
+				break;
 			default:
 				break;
 		}
@@ -64,10 +79,12 @@ public class LLVMActions extends NightmareBaseListener {
 		switch (type) {
 			case INT_TBL:
 				LLVMGenerator.getTableElement(ID,i,"i32",len);
+				LLVMGenerator.load_var(Integer.toString(LLVMGenerator.getCurrentReg()-1), "i32");
 				type = VarType.INT;
 				break;
 			case FLOAT_TBL:
 				LLVMGenerator.getTableElement(ID,i,"double",len);
+				LLVMGenerator.load_var(Integer.toString(LLVMGenerator.getCurrentReg()-1), "double");
 				type = VarType.FLOAT;
 			default:
 				break;
@@ -208,6 +225,9 @@ public class LLVMActions extends NightmareBaseListener {
 				LLVMGenerator.declare_table(ID, size, "double");
 				variables.put(ID, VarType.FLOAT_TBL);
 				break;
+			case "Fork":
+				LLVMGenerator.declare_table(ID,size, "i8");
+				variables.put(ID, VarType.STRING);
 			default:
 				break;
 		}
@@ -246,8 +266,6 @@ public class LLVMActions extends NightmareBaseListener {
 				break;
 			case FLOAT:
 				LLVMGenerator.assign_float(ID, v.name);
-			case STRING:
-
 			default:
 				break;
 		}
@@ -266,7 +284,7 @@ public class LLVMActions extends NightmareBaseListener {
 				LLVMGenerator.table_assign(ID,i,"i32",size, v.name);
 				break;
 			case FLOAT_TBL:
-
+				LLVMGenerator.table_assign(ID,i,"double",size, v.name);
 				break;
 			default:
 				break;
@@ -315,7 +333,8 @@ public class LLVMActions extends NightmareBaseListener {
 				LLVMGenerator.scanf_float(ID);
 				break;
 			case STRING:
-				LLVMGenerator.scanf_string(ID);
+				LLVMGenerator.getTableElement(ID,"0","i8",tables.get(ID));
+				LLVMGenerator.scanf_string(Integer.toString(LLVMGenerator.getCurrentReg()-1));
 			default:
 				break;
 		}

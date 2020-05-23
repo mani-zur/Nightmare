@@ -12,6 +12,7 @@ command
     | assign_stm
     | assign_table_stm
     | assign_string
+    | loop_stm
     | comment
     ;
 
@@ -63,11 +64,21 @@ expr2
     | '(' expr0 ')' #par
     ;
 
+loop_stm
+    : 'LOOP' repetitions (command 'xD')* 'ENDLOOP'
+    ;
+
+repetitions
+    : expr2
+    ;
+
 comment
     : 'nvm' ( ~('nvm'|'\\'|'"') )* 'nvm'
     ;
 
+
 //Types
+
 TYPE
     :'Tank'
     |'Daisy'

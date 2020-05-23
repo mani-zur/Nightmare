@@ -1,8 +1,13 @@
+import java.util.Stack;
+
 class LLVMGenerator{
    
 	static String header_text = "";
 	static String main_text = "";
 	static int reg = 1;
+	static int br = 0;
+
+	static Stack<Integer> brstack = new Stack<Integer>();
 
 	static int getCurrentReg(){
 		return reg;
@@ -26,13 +31,15 @@ class LLVMGenerator{
 
 	}
 
+
+
 	
 
 	static void getTableElement(String id, String i, String type, String max){
 		main_text += "%" + reg + " = getelementptr inbounds ["+max+" x "+type+"], ["+max+" x "+type+"]* %"+id+", i64 0, i64 "+ i + "\n";
 		reg++;
-		main_text += "%" + reg + " = load " + type + ", " + type + "* %" + Integer.toString(reg-1) + "\n";
-		reg++;
+		//main_text += "%" + reg + " = load " + type + ", " + type + "* %" + Integer.toString(reg-1) + "\n";
+		//reg++;
 	}
 
 
@@ -67,7 +74,7 @@ class LLVMGenerator{
 	}
 
 	static void scanf_string(String id){
-		main_text += "%"+reg+" = call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @pstr_str, i32 0, i32 0), i8* %" + id+ ")\n";
+		main_text += "%"+reg+" = call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @rstr_str, i32 0, i32 0), i8* %" + id+ ")\n";
 		reg++;    
 	}
 
@@ -135,6 +142,31 @@ class LLVMGenerator{
 	static void assign_float(String id, String value){
 		main_text += "store double "+value+", double* %"+id+"\n";
 	}
+
+	static void repeatstart(String repetitions){
+		declare_i32(Integer.toString(reg));
+		int counter = reg;
+		reg++;
+		assign_i32(Integer.toString(counter), "0");
+		br++;
+		main_text += "br label %cond"+br+"\n";
+		main_text += "cond"+br+":\n";
+		load_var(Integer.toString(counter),"i32");
+		add_i32("%" + (reg-1), "1");
+		assign_i32(Integer.toString(counter), "%"+(reg-1));
+
+		main_text += "%"+reg+" = icmp slt i32 %"+(reg-2)+", "+repetitions+"\n";
+		reg++;
+		main_text += "br i1 %"+(reg-1)+", label %true"+br+", label %false"+br+"\n";
+		main_text += "true"+br+":\n";
+		brstack.push(br);
+	  }
+
+	  static void repeatend(){
+		int b = brstack.pop();
+		main_text += "br label %cond"+b+"\n";
+		main_text += "false"+b+":\n";
+	  }
  
  
     static String generate(){
@@ -146,6 +178,7 @@ class LLVMGenerator{
 		text += "@rstr_int = constant [3 x i8] c\"%d\\00\", align 1\n";
 		text += "@pstr_int = constant [4 x i8] c\"%d\\0A\\00\", align 1\n";
 		text += "@pstr_str = constant [4 x i8] c\"%s\\0A\\00\", align 1\n";
+		text += "@rstr_str = constant [3 x i8] c\"%s\\00\", align 1\n";
     	text += header_text;
 		text += "define i32 @main() nounwind{\n";
     	text += main_text;
