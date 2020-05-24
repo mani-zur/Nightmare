@@ -2,7 +2,7 @@
 grammar Nightmare ;
 
 nightmare
-    : (command 'xD')*
+    :  ((command | function_declaration) 'xD')*
     ;
 
 command
@@ -16,6 +16,16 @@ command
     | if_stm
     | comment
     ;
+
+function_declaration
+    : 'FUN' params (command 'xD')* 'ENDFUN'
+    ;
+
+params
+    : TYPE ID 
+    ;
+
+
 
 //Statemnts
 

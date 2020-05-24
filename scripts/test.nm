@@ -30,8 +30,18 @@ LOOP i
 ENDLOOP xD
 
 nvm INSTRUKCJA WARUNKOWA nvm xD
-Tank x = 5 xD
-Daisy y = 6.0 xD
-IF y == 7.0 THEN
-    Think x xD
+Tank z = 5 xD
+Daisy yy = 6.0 xD
+IF yy == 7.0 THEN
+    Think z xD
 ENDIF xD
+
+
+nvm FUNKCJA nvm xD
+FUN Tank dziena
+    Tank elo = 0 xD
+    Think elo xD
+    dziena = 6 xD
+ENDFUN xD
+
+Think dziena xD

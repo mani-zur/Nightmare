@@ -1,7 +1,7 @@
 import java.util.HashMap;
 import java.util.Stack;
 
-enum VarType{ INT, FLOAT, STRING, INT_TBL, FLOAT_TBL}
+enum VarType{ INT, FLOAT, STRING, INT_TBL, FLOAT_TBL, INT_FUN, FLOAT_FUN}
 
 class Value{ 
 	public String name;
@@ -16,11 +16,15 @@ class Value{
 public class LLVMActions extends NightmareBaseListener {
 
 	HashMap<String, VarType> variables = new HashMap<String, VarType>();
+	HashMap<String, VarType> localvariables = new HashMap<String, VarType>();
 	HashMap<String, String> tables = new HashMap<String, String>();
-    Stack <Value> stack = new Stack<Value>();
+	Stack <Value> stack = new Stack<Value>();
+	
+	Boolean global;
 
     @Override 
     public void exitNightmare(NightmareParser.NightmareContext ctx) { 
+		LLVMGenerator.close_main();
         System.out.println(LLVMGenerator.generate());
 	}
 
@@ -65,6 +69,46 @@ public class LLVMActions extends NightmareBaseListener {
 
 	}
 
+	//FUNCTION
+	@Override 
+	public void exitParams(NightmareParser.ParamsContext ctx) { 
+		String ID = ctx.ID().getText();
+		if (variables.containsKey(ID)) error(ctx.getStart().getLine(), "Redeclaration");
+		String type = ctx.TYPE().getText();
+		switch (type) {
+			case "Tank":	//int
+				LLVMGenerator.functionstart(ID, "i32");
+				variables.put(ID, VarType.INT_FUN);
+				break;
+			case "Daisy":	//Float
+				LLVMGenerator.functionstart(ID, "double");
+				variables.put(ID, VarType.FLOAT_FUN);
+				break;
+			default:
+				error(ctx.getStart().getLine(),":" + type + ":Unknown type");
+				break;
+		}
+	}
+
+	@Override 
+	public void exitFunction_declaration(NightmareParser.Function_declarationContext ctx) { 
+		String ID = ctx.params().ID().getText();
+		VarType type = variables.get(ID);
+		switch (type) {
+			case INT_FUN:
+				LLVMGenerator.load_var(ID,"i32","%");
+				LLVMGenerator.functionend("i32");
+				break;
+			case FLOAT_FUN:
+				LLVMGenerator.load_var(ID,"double","%");
+				LLVMGenerator.functionend("double");
+				break;
+			default:
+				break;
+		}
+
+	}
+
 	
 	//TYPE
 
@@ -82,20 +126,29 @@ public class LLVMActions extends NightmareBaseListener {
 	public void exitId(NightmareParser.IdContext ctx) {
 		String ID = ctx.ID().getText();
 		VarType type = variables.get(ID);
-		switch (type) {
-			case INT:
-				LLVMGenerator.load_var(ID,"i32");
-				break;
-			case FLOAT:
-				LLVMGenerator.load_var(ID,"double");
-				break;
-			case STRING:
-				if (tables.containsKey(ID)) LLVMGenerator.getTableElement(ID,"0","i8",tables.get(ID));
-				else LLVMGenerator.load_var(ID,"i8*");
-				break;
-			default:
-				break;
+		if (type != null){
+			switch (type) {
+				case INT:
+					LLVMGenerator.load_var(ID,"i32","%");
+					break;
+				case FLOAT:
+					LLVMGenerator.load_var(ID,"double","%");
+					break;
+				case STRING:
+					if (tables.containsKey(ID)) LLVMGenerator.getTableElement(ID,"0","i8",tables.get(ID));
+					else LLVMGenerator.load_var(ID,"i8*","%");
+					break;
+				case INT_FUN:
+					LLVMGenerator.call(ID, "i32");
+					break;
+				case FLOAT_FUN:
+					LLVMGenerator.call(ID, "double");
+					break;
+				default:
+					break;
+			}
 		}
+		else error(ctx.getStart().getLine(), "Variable not exist !");
 		stack.push(new Value('%' + String.valueOf(LLVMGenerator.getCurrentReg()-1),type));
 	}
 
@@ -109,12 +162,12 @@ public class LLVMActions extends NightmareBaseListener {
 		switch (type) {
 			case INT_TBL:
 				LLVMGenerator.getTableElement(ID,i,"i32",len);
-				LLVMGenerator.load_var(Integer.toString(LLVMGenerator.getCurrentReg()-1), "i32");
+				LLVMGenerator.load_var(Integer.toString(LLVMGenerator.getCurrentReg()-1), "i32", "%");
 				type = VarType.INT;
 				break;
 			case FLOAT_TBL:
 				LLVMGenerator.getTableElement(ID,i,"double",len);
-				LLVMGenerator.load_var(Integer.toString(LLVMGenerator.getCurrentReg()-1), "double");
+				LLVMGenerator.load_var(Integer.toString(LLVMGenerator.getCurrentReg()-1), "double", "%");
 				type = VarType.FLOAT;
 			default:
 				break;
@@ -292,10 +345,13 @@ public class LLVMActions extends NightmareBaseListener {
 		Value v = stack.pop();
 		switch (v.type) {
 			case INT:
+			case INT_FUN:
 				LLVMGenerator.assign_i32(ID, v.name);
 				break;
 			case FLOAT:
+			case FLOAT_FUN:
 				LLVMGenerator.assign_float(ID, v.name);
+				break;
 			default:
 				break;
 		}
@@ -337,9 +393,11 @@ public class LLVMActions extends NightmareBaseListener {
 		Value v = stack.pop();
 		switch (v.type) {
 			case INT:
+			case INT_FUN:
 				LLVMGenerator.printf_i32(v.name);
 				break;
 			case FLOAT:
+			case FLOAT_FUN:
 				LLVMGenerator.printf_float(v.name);
 				break;
 			case STRING:
