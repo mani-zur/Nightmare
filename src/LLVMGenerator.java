@@ -160,13 +160,45 @@ class LLVMGenerator{
 		main_text += "br i1 %"+(reg-1)+", label %true"+br+", label %false"+br+"\n";
 		main_text += "true"+br+":\n";
 		brstack.push(br);
-	  }
+	}
 
-	  static void repeatend(){
+	static void repeatend(){
 		int b = brstack.pop();
 		main_text += "br label %cond"+b+"\n";
 		main_text += "false"+b+":\n";
-	  }
+	}
+
+	static void ifstart(){
+		br++;
+		main_text += "br i1 %"+(reg-1)+", label %true"+br+", label %false"+br+"\n";
+		main_text += "true"+br+":\n";
+		brstack.push(br);
+	}
+
+	static void ifend(){
+		int b = brstack.pop();
+		main_text += "br label %false"+b+"\n";
+		main_text += "false"+b+":\n";
+	}
+
+	static void icmp(String v1, String v2){
+		main_text += "%"+reg+" = icmp eq i32 "+v1+", "+v2+"\n";
+		reg++;
+	}
+
+	static void fcmp(String v1, String v2){
+		main_text += "%"+reg+" = fcmp oeq double "+v1+", "+v2+"\n";
+		reg++;
+	}
+
+
+	/*static void icmp(String v1, String v1, String type){
+		main_text += "%"+reg+" = load i32, i32* %"+id+"\n";
+		reg++;
+		main_text += "%"+reg+" = icmp eq i32 %"+(reg-1)+", "+value+"\n";
+		reg++;
+	}*/
+
  
  
     static String generate(){

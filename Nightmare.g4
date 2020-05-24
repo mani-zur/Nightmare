@@ -13,6 +13,7 @@ command
     | assign_table_stm
     | assign_string
     | loop_stm
+    | if_stm
     | comment
     ;
 
@@ -70,6 +71,14 @@ loop_stm
 
 repetitions
     : expr2
+    ;
+
+if_stm
+    : 'IF' condition 'THEN' (command 'xD')* 'ENDIF'
+    ;
+
+condition
+    : expr0 '==' expr0
     ;
 
 comment

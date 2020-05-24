@@ -28,3 +28,10 @@ LOOP i
         i = i + 1 xD
     ENDLOOP xD
 ENDLOOP xD
+
+nvm INSTRUKCJA WARUNKOWA nvm xD
+Tank x = 5 xD
+Daisy y = 6.0 xD
+IF y == 7.0 THEN
+    Think x xD
+ENDIF xD

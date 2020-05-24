@@ -35,6 +35,36 @@ public class LLVMActions extends NightmareBaseListener {
 		LLVMGenerator.repeatend();
 	}
 
+
+	//IF
+
+	@Override 
+	public void exitCondition(NightmareParser.ConditionContext ctx) { 
+		Value v1 = stack.pop();
+		Value v2 = stack.pop();
+		if (v1.type == v2.type){
+			switch (v1.type) {
+                case INT:
+                    LLVMGenerator.icmp(v1.name, v2.name);
+                    break;
+				case FLOAT:
+					LLVMGenerator.fcmp(v1.name, v2.name);
+                    break;
+            
+                default:
+                    error(ctx.getStart().getLine(), "type mismatch");
+                    break;
+            }
+		}
+		LLVMGenerator.ifstart();
+	}
+
+	@Override 
+	public void exitIf_stm(NightmareParser.If_stmContext ctx) { 
+		LLVMGenerator.ifend();
+
+	}
+
 	
 	//TYPE
 
